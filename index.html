@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shineray PK Motors | Dashboard de Envios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e4181b;
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --text: #333;
+      --border: #e0e0e0;
+      --success: #27ae60;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+
+    /* Header */
+    header { 
+      background: #fff; padding: 1rem 5%; display: flex; 
+      justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .logo-img { height: 45px; } /* Logo oficial Shineray */
+
+    .container { max-width: 1200px; margin: 2rem auto; display: grid; grid-template-columns: 1fr 350px; gap: 2rem; padding: 0 1rem; }
+
+    .card { background: var(--card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+    h2 { font-size: 1.1rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 10px; color: #555; }
+
+    /* Lista de Contatos */
+    .contact-list { height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+    .contact-item { padding: 10px; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+    .contact-item:hover { background: #f0f7ff; }
+
+    /* Forms */
+    textarea, input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; font-family: inherit; }
+    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%; }
+    .btn:hover { background: #c31417; transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+
+    /* Upload Area */
+    .upload-box { border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; margin-bottom: 1rem; }
+    .upload-box:hover { border-color: var(--primary); }
+    
+    .status-bar { display: flex; gap: 10px; align-items: center; font-size: 0.8rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
+    .dot.online { background: var(--success); box-shadow: 0 0 5px var(--success); }
+
+    /* Search bar */
+    .search-bar { position: sticky; top: 0; background: white; z-index: 5; padding-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/Shineray_logo.png" alt="Shineray Logo" class="logo-img">
+  <div class="status-bar">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusTxt">Aguardando Conexão</span>
+  </div>
+</header>
+
+<div class="container">
+  <main>
+    <div class="card">
+      <h2>1. Selecionar Destinatários</h2>
+      <div class="search-bar">
+        <input type="text" id="searchContacts" placeholder="Buscar na sua agenda..." onkeyup="filterContacts()">
+        <div style="display:flex; gap: 10px;">
+          <button class="btn btn-outline" onclick="selectAll(true)" style="padding: 5px;">Selecionar Todos</button>
+          <button class="btn btn-outline" onclick="selectAll(false)" style="padding: 5px;">Desmarcar Todos</button>
+        </div>
+      </div>
+      <div class="contact-list" id="contactList">
+        <p style="padding: 20px; color: #888; text-align: center;">Conecte o WhatsApp para ver seus contatos...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Mensagem e Mídia</h2>
+      <textarea id="msg" placeholder="Olá {nome}, confira as ofertas da Shineray PK Motors!" rows="5"></textarea>
+      
+      <label>Anexar Imagem ou Vídeo</label>
+      <input type="file" id="fileInput" accept="image/*,video/*">
+      
+      <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+        <span>Click para anexar foto da moto/oferta 📷</span>
+      </div>
+      
+      <button class="btn" onclick="enviarMensagens()">🚀 Iniciar Disparo</button>
+    </div>
+  </main>
+
+  <aside>
+    <div class="card" style="text-align: center;">
+      <h2>Conexão</h2>
+      <div id="qrContainer">
+         <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Aguardando" id="qrImg" style="width: 100%; border: 1px solid #ddd;">
+      </div>
+      <p style="font-size: 0.8rem; margin-top: 10px; color: #666;">Acesse WhatsApp > Aparelhos Conectados</p>
+    </div>
+
+    <div class="card">
+      <h2>Configurações</h2>
+      <label>Intervalo (segundos)</label>
+      <input type="number" value="15" id="delay">
+      <small style="color: #999;">Intervalos longos evitam bloqueios.</small>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // Simulação de lógica de seleção
+  function filterContacts() {
+    let input = document.getElementById('searchContacts').value.toUpperCase();
+    let items = document.getElementsByClassName('contact-item');
+    for (let i = 0; i < items.length; i++) {
+      let txtValue = items[i].textContent || items[i].innerText;
+      items[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+    }
+  }
+
+  function selectAll(bool) {
+    let checkboxes = document.querySelectorAll('.contact-checkbox');
+    checkboxes.forEach(cb => cb.checked = bool);
+  }
+
+  // Aqui você faria a integração com o seu server.js
+  // fetch('/get-contacts').then(res => res.json()).then(contacts => { ... renderizar ... })
+</script>
+
+</body>
+</html>
